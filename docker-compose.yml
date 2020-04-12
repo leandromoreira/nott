@@ -9,8 +9,10 @@ services:
       - "./nott.html:/usr/local/openresty/nginx/index.html"
     depends_on:
       - ingest
+      - redis_cluster
     links:
       - ingest
+      - redis_cluster
     ports:
       - "8080:8080"
 
@@ -22,3 +24,8 @@ services:
       - "./ingest.conf:/config/nginx.conf"
     ports:
       - "1935:1935"
+
+  redis_cluster: # data store
+    image: grokzen/redis-cluster:latest
+    ports:
+      - '7000-7005:7000-7005'
