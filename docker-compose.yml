@@ -1,0 +1,24 @@
+version: '2.1'
+
+services:
+  edge: # front end
+    build:
+      context: .
+    volumes:
+      - "./edge.conf:/usr/local/openresty/nginx/conf/nginx.conf"
+      - "./nott.html:/usr/local/openresty/nginx/index.html"
+    depends_on:
+      - ingest
+    links:
+      - ingest
+    ports:
+      - "8080:8080"
+
+  ingest: # back end
+    build:
+      context: .
+      dockerfile: Dockerfile.ingest
+    volumes:
+      - "./ingest.conf:/config/nginx.conf"
+    ports:
+      - "1935:1935"
