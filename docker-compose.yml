@@ -7,6 +7,7 @@ services:
     volumes:
       - "./edge.conf:/usr/local/openresty/nginx/conf/nginx.conf"
       - "./nott.html:/usr/local/openresty/nginx/index.html"
+      - "./src/:/lua/src/"
     depends_on:
       - ingest
       - redis_cluster
@@ -29,3 +30,11 @@ services:
     image: grokzen/redis-cluster:latest
     ports:
       - '7000-7005:7000-7005'
+  test:
+    command: busted -c
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - ".:/lua/"
+    working_dir: "/lua"

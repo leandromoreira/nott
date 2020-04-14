@@ -6,6 +6,9 @@ down:
 run: down
 	docker-compose run --rm --service-ports edge
 
+test:
+	docker-compose run --rm test
+
 broadcast_tvshow:
 	docker run --rm jrottenberg/ffmpeg:4.1 -hide_banner -re -f lavfi -i 'testsrc2=size=1280x720:rate=60,format=yuv420p' \
                        -f lavfi -i 'sine=frequency=440:sample_rate=48000:beep_factor=4' \
