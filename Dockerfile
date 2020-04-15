@@ -12,5 +12,5 @@ RUN apt-get update \
     && cd resty-redis-cluster/ \
     && git checkout 8d7b96d002337c38d71859e5f04f76b413aa5c29 \
     && luarocks make \
-    && gcc -fPIC -shared -I/usr/local/openresty/luajit -o /usr/local/openresty/luajit/lib/lua/5.1/redis_slot.so lib/redis_slot.c \
+    && gcc -fPIC -shared -I/usr/local/openresty/luajit -o /usr/local/openresty/luajit/lib/lua/5.1/librestyredisslot.so src/redis_slot.c \
     && rm -Rf /src
