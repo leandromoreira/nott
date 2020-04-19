@@ -47,7 +47,7 @@ end
 
 -- receives an instance of redis_client
 edge_computing.start = function(redis_client)
-  -- run once
+  -- run once per worker
   if edge_computing.ready then
     return true, nil
   end
