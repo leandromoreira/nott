@@ -112,7 +112,7 @@ edge_computing.execute = function()
 
   for _, cu in ipairs(edge_computing.cus[phase]) do
     -- should we call it passing, redis?
-    local status, ret = pcall(cu["code"])
+    local status, ret = pcall(cu["code"], {redis_client=edge_computing.redis_client})
 
     if not status then
       table.insert(runtime_errors, "execution of cu id=" .. cu["id"] .. ", failed due err=" .. ret)
@@ -144,6 +144,16 @@ edge_computing.raw_coding_units = function()
   return raw_coding_units, nil
 end
 
+edge_computing.loadstring = function(str_code)
+  -- API wrapper
+  local api_fun, err = loadstring("return function (edge_computing) " .. str_code .. " end")
+  if api_fun then
+    return api_fun()
+  else
+    return api_fun, err
+  end
+end
+
 edge_computing.parse = function(raw_coding_units)
   edge_computing.initialize_cus()
   local parse_errors = {}
@@ -152,10 +162,10 @@ edge_computing.parse = function(raw_coding_units)
 
     local phase = parts[1]
     local raw_code = parts[2]
-    local function_code, err = loadstring(raw_code)
+    local function_code, err = edge_computing.loadstring(raw_code)
     if err ~= nil then
       local parse_error = "the computing unit id=" .. raw_coding_unit["id"] .. " failed to parse due err=" .. err
-      table.insert(edge_computing.parse_errors, parse_error)
+      table.insert(parse_errors, parse_error)
       goto continue
     end
 
