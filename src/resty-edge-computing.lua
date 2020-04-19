@@ -9,7 +9,12 @@ local edge_computing = {}
 
 edge_computing.cus = {}
 edge_computing.ready = false
-edge_computing.interval = 120 -- seconds
+edge_computing.interval = 20 -- seconds
+edge_computing.phases = {
+  "init", "init_worker", "ssl_cert", "ssl_session_fetch", "ssl_session_store", "set",
+  "rewrite", "balancer", "access", "content", "header_filter", "body_filter", "log",
+  "timer"
+}
 
 -- https://stackoverflow.com/questions/1426954/split-string-in-lua
 edge_computing.split = function(input_string, separator)
@@ -30,7 +35,14 @@ edge_computing.phase = function()
 end
 
 edge_computing.log = function(msg)
-  ngx.log(ngx.ERR, " :: edge_computing :: " .. msg)
+  ngx.log(ngx.ERR, " :: edge_computing :: [" .. ngx.worker.id() .. "] "  .. msg)
+end
+
+edge_computing.initialize_cus = function()
+  edge_computing.cus = {}
+  for _, phase in ipairs(edge_computing.phases) do
+    edge_computing.cus[phase] = {}
+  end
 end
 
 -- receives an instance of redis_client
@@ -51,6 +63,7 @@ edge_computing.start = function(redis_client)
   end
 
   edge_computing.redis_client = redis_client
+  edge_computing.initialize_cus()
   ngx.timer.every(edge_computing.interval, edge_computing.update)
   edge_computing.ready = true
   -- forcing the first query
@@ -66,17 +79,13 @@ edge_computing.update = function()
     return false
   end
 
-  local raw_coding_units
-  local err
-  local cus
-
-  raw_coding_units, err = edge_computing.raw_coding_units()
+  local raw_coding_units, err = edge_computing.raw_coding_units()
   if err then
     edge_computing.log(err)
     return false
   end
 
-  edge_computing.cus, err = edge_computing.parse(raw_coding_units)
+  local status, err = edge_computing.parse(raw_coding_units)
   if #err ~= 0 then
     for _, e in ipairs(err) do
       edge_computing.log(e)
@@ -97,17 +106,12 @@ edge_computing.execute = function()
   local phase = edge_computing.phase()
   local runtime_errors = {}
 
-  -- we're paying extra time here each execution time --
-  -- maybe we be move this to update --
-  -- creating a table [phase] = cus --
-  for _, cu in ipairs(edge_computing.cus) do
-    if cu["phase"] == phase then
-      -- should we call it passing, redis?
-      local status, ret = pcall(cu["code"])
+  for _, cu in ipairs(edge_computing.cus[phase]) do
+    -- should we call it passing, redis?
+    local status, ret = pcall(cu["code"])
 
-      if not status then
-        table.insert(runtime_errors, "execution of cu id=" .. cu["id"] .. ", failed due err=" .. ret)
-      end
+    if not status then
+      table.insert(runtime_errors, "execution of cu id=" .. cu["id"] .. ", failed due err=" .. ret)
     end
   end
 
@@ -137,8 +141,8 @@ edge_computing.raw_coding_units = function()
 end
 
 edge_computing.parse = function(raw_coding_units)
+  edge_computing.initialize_cus()
   local parse_errors = {}
-  local coding_units = {}
   for _, raw_coding_unit in ipairs(raw_coding_units) do
     local parts = edge_computing.split(raw_coding_unit["value"], "||")
 
@@ -156,10 +160,10 @@ edge_computing.parse = function(raw_coding_units)
     cu["phase"] = parts[1]
     cu["code"] = function_code
 
-    table.insert(coding_units, cu)
+    table.insert(edge_computing.cus[cu["phase"]], cu)
     ::continue::
   end
-  return coding_units, parse_errors
+  return true, parse_errors
 end
 
 return edge_computing
