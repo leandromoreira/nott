@@ -46,7 +46,7 @@ edge_computing.initialize_cus = function()
 end
 
 -- receives an instance of redis_client
-edge_computing.start = function(redis_client)
+edge_computing.start = function(redis_client, interval)
   -- run once per worker
   if edge_computing.ready then
     return true, nil
@@ -60,6 +60,10 @@ edge_computing.start = function(redis_client)
 
   if not redis_client then
     return nil, "you must specify the redis_client"
+  end
+
+  if interval then
+    edge_computing.interval = interval
   end
 
   edge_computing.redis_client = redis_client
