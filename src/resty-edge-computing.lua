@@ -100,7 +100,8 @@ edge_computing.update = function()
     return false
   end
 
-  local status, err = edge_computing.parse(raw_coding_units)
+  local _
+  _, err = edge_computing.parse(raw_coding_units)
   if #err ~= 0 then
     for _, e in ipairs(err) do
       edge_computing.log(e)
@@ -140,13 +141,13 @@ edge_computing.execute = function()
 end
 
 edge_computing.raw_coding_units = function()
-  local resp, err = edge_computing.redis_client:smembers("coding_units")
-  if err then
-    return nil, err
+  local coding_units_set, err_set = edge_computing.redis_client:smembers("coding_units")
+  if err_set then
+    return nil, err_set
   end
 
   local raw_coding_units = {}
-  for _, coding_unit_key in ipairs(resp) do
+  for _, coding_unit_key in ipairs(coding_units_set) do
     local resp, err = edge_computing.redis_client:get(coding_unit_key)
     if err then
       return nil, err
@@ -189,7 +190,7 @@ edge_computing.parse = function(raw_coding_units)
 
     local cu = {}
     cu["id"] = raw_coding_unit["id"]
-    cu["phase"] = parts[1]
+    cu["phase"] = phase
     cu["code"] = function_code
     cu["sampling"] = sampling
 

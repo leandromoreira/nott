@@ -6,6 +6,9 @@ down:
 run: down
 	docker-compose run --rm --service-ports edge
 
+lint:
+	docker-compose run --rm lint
+
 test:
 	docker-compose run --rm test
 
