@@ -5,6 +5,7 @@ local edge_computing = {}
 ---    cu["id"] = "coding id"
 ---    cu["phase"] = "phase"
 ---    cu["code"] = function_code
+---    cu["sampling"] = "50"
 --- computing unit ---
 
 edge_computing.cus = {}
@@ -45,6 +46,15 @@ edge_computing.initialize_cus = function()
   end
 end
 
+edge_computing.initialize_entropy = function()
+  local seed = ngx.time() + ngx.worker.pid()
+  math.randomseed(seed)
+end
+
+edge_computing.should_run = function(n)
+  return math.random(100) <= n
+end
+
 -- receives an instance of redis_client
 edge_computing.start = function(redis_client, interval)
   -- run once per worker
@@ -68,6 +78,7 @@ edge_computing.start = function(redis_client, interval)
 
   edge_computing.redis_client = redis_client
   edge_computing.initialize_cus()
+  edge_computing.initialize_entropy()
   ngx.timer.every(edge_computing.interval, edge_computing.update)
   edge_computing.ready = true
   -- forcing the first query
@@ -111,12 +122,18 @@ edge_computing.execute = function()
   local runtime_errors = {}
 
   for _, cu in ipairs(edge_computing.cus[phase]) do
-    -- should we call it passing, redis?
+    if cu["sampling"] ~= nil and cu["sampling"] ~= "" then
+      local sampling = tonumber(cu["sampling"])
+      local should_run = edge_computing.should_run(sampling)
+      if should_run then goto continue end
+    end
+
     local status, ret = pcall(cu["code"], {redis_client=edge_computing.redis_client})
 
     if not status then
       table.insert(runtime_errors, "execution of cu id=" .. cu["id"] .. ", failed due err=" .. ret)
     end
+    ::continue::
   end
 
   return true, runtime_errors
@@ -162,6 +179,7 @@ edge_computing.parse = function(raw_coding_units)
 
     local phase = parts[1]
     local raw_code = parts[2]
+    local sampling = parts[3]
     local function_code, err = edge_computing.loadstring(raw_code)
     if err ~= nil then
       local parse_error = "the computing unit id=" .. raw_coding_unit["id"] .. " failed to parse due err=" .. err
@@ -173,6 +191,7 @@ edge_computing.parse = function(raw_coding_units)
     cu["id"] = raw_coding_unit["id"]
     cu["phase"] = parts[1]
     cu["code"] = function_code
+    cu["sampling"] = sampling
 
     table.insert(edge_computing.cus[cu["phase"]], cu)
     ::continue::
