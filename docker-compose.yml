@@ -31,7 +31,14 @@ services:
     ports:
       - '7000-7005:7000-7005'
   test:
-    command: busted -c
+    command: busted -v --shuffle
+    environment:
+      - TRAVIS=true
+      - CI=true
+      - COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN}
+      - TRAVIS_JOB_ID=${TRAVIS_JOB_ID}
+      - TRAVIS_BRANCH=${TRAVIS_BRANCH}
+      - TRAVIS_REPO_SLUG=${TRAVIS_REPO_SLUG}
     build:
       context: .
       dockerfile: Dockerfile.test
@@ -47,3 +54,4 @@ services:
     volumes:
       - ".:/lua/"
     working_dir: "/lua"
+

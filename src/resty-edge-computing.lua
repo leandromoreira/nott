@@ -62,14 +62,14 @@ edge_computing.start = function(redis_client, interval)
     return true, nil
   end
 
+  if not redis_client then
+    return nil, "you must specify the redis_client"
+  end
+
   -- we can't run earlier like init_worker due to
   -- resty-lock (used by redis cluster) restrictions around the phases
   if edge_computing.phase() ~= "rewrite" then
     return nil, "expect lua phase to be rewrite* not " .. edge_computing.phase()
-  end
-
-  if not redis_client then
-    return nil, "you must specify the redis_client"
   end
 
   if interval then
@@ -94,6 +94,7 @@ edge_computing.update = function()
     return false
   end
 
+  edge_computing.initialize_cus()
   local raw_coding_units, err = edge_computing.raw_coding_units()
   if err then
     edge_computing.log(err)
@@ -109,7 +110,7 @@ edge_computing.update = function()
     return true
   end
 
-  return true, nil
+  return true
 end
 
 -- returns status and computing units runtime errors
@@ -172,15 +173,41 @@ edge_computing.loadstring = function(str_code)
   end
 end
 
+edge_computing.empty = function(value)
+  return value == "" or value == nil or value == ngx.null
+end
+
+edge_computing.non_existent_phase = function(phase)
+  for _, p in ipairs(edge_computing.phases) do
+    if p == phase then
+      return false
+    end
+  end
+  return true
+end
+
 edge_computing.parse = function(raw_coding_units)
-  edge_computing.initialize_cus()
+  local empty = edge_computing.empty
   local parse_errors = {}
   for _, raw_coding_unit in ipairs(raw_coding_units) do
+    if empty(raw_coding_unit["value"]) then
+      local parse_error = "the computing unit id=" .. raw_coding_unit["id"] .. " has an invalid value"
+      table.insert(parse_errors, parse_error)
+      goto continue
+    end
+
     local parts = edge_computing.split(raw_coding_unit["value"], "||")
 
     local phase = parts[1]
     local raw_code = parts[2]
     local sampling = parts[3]
+
+    if empty(raw_code) or empty(phase) or edge_computing.non_existent_phase(phase) then
+      local parse_error = "the computing unit id=" .. raw_coding_unit["id"] .. " failed to parse value=" .. raw_coding_unit["value"]
+      table.insert(parse_errors, parse_error)
+      goto continue
+    end
+
     local function_code, err = edge_computing.loadstring(raw_code)
     if err ~= nil then
       local parse_error = "the computing unit id=" .. raw_coding_unit["id"] .. " failed to parse due err=" .. err
