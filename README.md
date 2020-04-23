@@ -4,8 +4,8 @@
 
 In the three-post series, we’re going to build:
 *  a simple [**video platform**](https://leandromoreira.com.br/2020/04/19/building-an-open-source-ott-platform/) using open-source software (nginx-rtmp, ffmpeg, nginx)
-* add [features, using Lua code](https://leandromoreira.com.br/2020/04/19/empowering-nginx-with-lua-code/) on the front end
-* design a platform that will enable to [**add code dynamically**](https://leandromoreira.com.br/2020/04/19/building-an-edge-computing-platform/)
+* add [code](https://leandromoreira.com.br/2020/04/19/empowering-nginx-with-lua-code/) on the front end (lua)
+* design a platform that will enable to [**add code dynamically**](https://leandromoreira.com.br/2020/04/19/building-an-edge-computing-platform/) (redis cluster)
 
 # Architecture
 
