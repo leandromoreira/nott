@@ -27,6 +27,26 @@ make broadcast_tvshow
 # but you can use OBS and point to your own machine
 
 # open your browser and point it to http://localhost:8080/app
+
+# in a different tab - you can test the stream
+http http://localhost:8080/hls/colorbar.m3u8
+
+# in another tab - let's add CU to redis
+# -- first need to discovery the redis cluster id
+docker ps | grep redis
+
+# -- then let's connect to the redis cluster
+docker exec -it f44ed71b3056 redis-cli -c -p 7000
+# inside redis-cluster let's add the CU
+set authentication "rewrite||local token = ngx.var.arg_token or ngx.var.cookie_superstition \n if token ~= 'token' then \n return ngx.exit(ngx.HTTP_FORBIDDEN) \n else \n ngx.header['Set-Cookie'] = {'superstition=token'} \n end"
+sadd coding_units authentication
+
+# go back and test the stream response - you should eventually (after max 20s)
+# receive 403 as response
+http http://localhost:8080/hls/colorbar.m3u8
+
+# add the token and it'll work again
+http http://localhost:8080/hls/colorbar.m3u8?token=token
 ```
 
 # UI
