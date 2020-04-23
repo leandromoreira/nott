@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/leandromoreira/nott.svg?branch=master)](https://travis-ci.org/leandromoreira/nott) [![license](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)
+
 # NOTT - New OTT
 
 In the three-post series, we’re going to build:
