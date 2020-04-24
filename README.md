@@ -55,3 +55,9 @@ http http://localhost:8080/hls/colorbar.m3u8?token=token
 
 ![NOTT's UI](/img/nott_view.png "NOTT's UI")
 
+# TODOs
+
+- [ ] - Admin
+- [ ] - Add Vod (NGINX-based MP4 Repackager)
+- [ ] - Add Nginx::Tests
+
