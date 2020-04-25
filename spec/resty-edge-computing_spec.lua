@@ -222,13 +222,17 @@ describe("Resty Edge Computing", function()
 
     it("runs code accessing redis_client", function()
       stub(ngx, "say")
-      redis_get_resp = "any valid key"
-      update_cu("access|| local r, e = edge_computing.redis_client:get('key') \n ngx.say(r)")
+      stub(fake_redis, "incr")
+      fake_redis.incr = function(_)
+        return "1", nil
+      end
+
+      update_cu("access|| local r = edge_computing.redis_client:incr('key') \n ngx.say(r)")
       local resp, errors = edge_computing.execute()
 
       assert.same(resp, true)
       assert.same(#errors, 0)
-      assert.stub(ngx.say).was.called()
+      assert.stub(ngx.say).was.called_with("1")
 
       -- luacheck: ignore
       ngx.say:revert()
