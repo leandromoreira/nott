@@ -16,6 +16,7 @@ _G.ngx = {
   },
   log=function(_, msg) print(msg) end,
   timer={
+    -- luacheck: no unused args
     every=function(interval, func) return "Running in background" end
   },
   exit=function(code) print(code) end,
@@ -84,6 +85,7 @@ describe("Resty Edge Computing", function()
       assert.is_not_nil(resp)
       assert.stub(ngx.timer.every).was.called(1)
 
+      -- luacheck: ignore
       ngx.timer.every:revert()
     end)
 
@@ -95,6 +97,7 @@ describe("Resty Edge Computing", function()
       assert.is_not_nil(resp)
       assert.stub(edge_computing.update).was.called(1)
 
+      -- luacheck: ignore
       edge_computing.update:revert()
     end)
   end)
@@ -163,7 +166,6 @@ describe("Resty Edge Computing", function()
       }
       for _, invalid_cu in ipairs(unexpected_values) do
         it("skips " .. invalid_cu.title, function()
-          local phase = "phase"
           redis_smembers_resp = {"authorization"}
           redis_get_resp = invalid_cu.value
           stub(edge_computing, "log")
@@ -174,6 +176,7 @@ describe("Resty Edge Computing", function()
           assert.same(#edge_computing.cus[invalid_cu.phase], 0)
           assert.stub(edge_computing.log).was.called(1)
 
+          -- luacheck: ignore
           edge_computing.log:revert()
         end)
       end
@@ -205,6 +208,7 @@ describe("Resty Edge Computing", function()
       assert.same(#errors, 0)
       assert.stub(ngx.exit).was.called()
 
+      -- luacheck: ignore
       ngx.exit:revert()
     end)
 
@@ -226,6 +230,7 @@ describe("Resty Edge Computing", function()
       assert.same(#errors, 0)
       assert.stub(ngx.say).was.called()
 
+      -- luacheck: ignore
       ngx.say:revert()
     end)
 
@@ -240,12 +245,14 @@ describe("Resty Edge Computing", function()
       assert.same(#errors, 0)
       assert.stub(ngx.exit).was_not.called()
 
+      -- luacheck: ignore
       ngx.exit:revert()
     end)
 
     it("does the execution based on sampling", function()
       stub(ngx, "exit")
       local builtin_rnd = math.random
+      -- luacheck: ignore
       math.random = function() return 60 end
 
       update_cu("access||ngx.exit(403)||59") -- 59% of change
@@ -255,6 +262,7 @@ describe("Resty Edge Computing", function()
       assert.same(#errors, 0)
       assert.stub(ngx.exit).was.called()
 
+      -- luacheck: ignore
       ngx.exit:revert()
       math.random = builtin_rnd
     end)
@@ -262,6 +270,7 @@ describe("Resty Edge Computing", function()
     it("skips execution based on sampling", function()
       stub(ngx, "exit")
       local builtin_rnd = math.random
+      -- luacheck: ignore
       math.random = function() return 42 end
 
       update_cu("access||ngx.exit(403)||59") -- 3% of change
@@ -271,6 +280,7 @@ describe("Resty Edge Computing", function()
       assert.same(#errors, 0)
       assert.stub(ngx.exit).was_not.called()
 
+      -- luacheck: ignore
       ngx.exit:revert()
       math.random = builtin_rnd
     end)
