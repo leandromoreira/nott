@@ -203,6 +203,7 @@ edge_computing.parse = function(raw_coding_units)
     local sampling = parts[3]
 
     if empty(raw_code) or empty(phase) or edge_computing.non_existent_phase(phase) then
+      -- luacheck: max code line length 140
       local parse_error = "the computing unit id=" .. raw_coding_unit["id"] .. " failed to parse value=" .. raw_coding_unit["value"]
       table.insert(parse_errors, parse_error)
       goto continue
