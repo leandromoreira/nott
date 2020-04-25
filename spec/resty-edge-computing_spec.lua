@@ -2,8 +2,8 @@ package.path = package.path .. ";spec/?.lua"
 
 local edge_computing = require "resty-edge-computing"
 local fake_redis
-local smembers = {}
-local get_resp = "0"
+local redis_smembers_resp = {}
+local redis_get_resp = "0"
 local ngx_phase = nil
 
 _G.ngx = {
@@ -27,13 +27,13 @@ before_each(function()
     stub(fake_redis, "smembers")
     stub(fake_redis, "get")
     fake_redis.smembers = function(_)
-      return smembers, nil
+      return redis_smembers_resp, nil
     end
     fake_redis.get = function(_)
-      return get_resp, nil
+      return redis_get_resp, nil
     end
-    smembers = {}
-    get_resp = "0"
+    redis_smembers_resp = {}
+    redis_get_resp = "0"
     ngx_phase = "rewrite"
     -- simulating initial state
     edge_computing.ready = false
@@ -114,8 +114,8 @@ describe("Resty Edge Computing", function()
         local phase = "access"
         assert.same(#edge_computing.cus[phase], 0)
 
-        smembers = {"authorization"}
-        get_resp = phase .. "||local a = 1 \n return a"
+        redis_smembers_resp = {"authorization"}
+        redis_get_resp = phase .. "||local a = 1 \n return a"
 
         local resp = edge_computing.update()
 
@@ -133,8 +133,8 @@ describe("Resty Edge Computing", function()
         local phase = "access"
         assert.same(#edge_computing.cus[phase], 0)
 
-        smembers = {"authorization"}
-        get_resp = phase .. "||local a = 1 \n return a||85"
+        redis_smembers_resp = {"authorization"}
+        redis_get_resp = phase .. "||local a = 1 \n return a||85"
 
         local resp = edge_computing.update()
 
@@ -164,8 +164,8 @@ describe("Resty Edge Computing", function()
       for _, invalid_cu in ipairs(unexpected_values) do
         it("skips " .. invalid_cu.title, function()
           local phase = "phase"
-          smembers = {"authorization"}
-          get_resp = invalid_cu.value
+          redis_smembers_resp = {"authorization"}
+          redis_get_resp = invalid_cu.value
           stub(edge_computing, "log")
 
           local resp = edge_computing.update()
@@ -190,8 +190,8 @@ describe("Resty Edge Computing", function()
     end)
 
     function update_cu(raw_code)
-      smembers = {"authorization"}
-      get_resp = raw_code
+      redis_smembers_resp = {"authorization"}
+      redis_get_resp = raw_code
       edge_computing.update()
     end
 
@@ -218,7 +218,7 @@ describe("Resty Edge Computing", function()
 
     it("runs code accessing redis_client", function()
       stub(ngx, "say")
-      get_resp = "any valid key"
+      redis_get_resp = "any valid key"
       update_cu("access|| local r, e = edge_computing.redis_client:get('key') \n ngx.say(r)")
       local resp, errors = edge_computing.execute()
 
