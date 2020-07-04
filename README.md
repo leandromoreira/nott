@@ -3,9 +3,9 @@
 # NOTT - New OTT
 
 In the three-post series, we’re going to build:
-*  a simple [**video platform**](https://leandromoreira.com.br/2020/04/19/building-an-open-source-ott-platform/) using open-source software (nginx-rtmp, ffmpeg, nginx)
-* add [code](https://leandromoreira.com.br/2020/04/19/empowering-nginx-with-lua-code/) on the front end (lua)
-* design a platform that will enable to [**add code dynamically**](https://leandromoreira.com.br/2020/04/19/building-an-edge-computing-platform/) (redis cluster)
+*  a simple [**video platform**](https://leandromoreira.com/2020/04/19/building-an-open-source-ott-platform/) using open-source software (nginx-rtmp, ffmpeg, nginx)
+* add [code](https://leandromoreira.com/2020/04/19/empowering-nginx-with-lua-code/) on the front end (lua)
+* design a platform that will enable to [**add code dynamically**](https://leandromoreira.com/2020/04/19/building-an-edge-computing-platform/) (redis cluster)
 
 # Architecture
 
